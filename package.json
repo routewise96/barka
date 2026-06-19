@@ -14,8 +14,9 @@
     "verify:core": "node scripts/verify-core-demo.mjs",
     "verify:pack": "node scripts/verify-pack-roundtrip.mjs",
     "verify:degradation": "node scripts/verify-degradation.mjs",
+    "verify:export": "node scripts/verify-export.mjs",
     "verify:play": "node scripts/test-play-session.mjs",
-    "verify": "npm run verify:core && npm run verify:pack && npm run verify:degradation && npm run verify:play"
+    "verify": "npm run verify:core && npm run verify:pack && npm run verify:degradation && npm run verify:export && npm run verify:play"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

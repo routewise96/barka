@@ -9,11 +9,12 @@
  * После импорта каталог пересобирается (store.refreshCatalog).
  */
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { exportAndSharePack, pickAndImportPack } from '../../src/content/packArchive';
+import { exportEventsToFile, getEventCounts, type EventCounts } from '../../src/diagnostics/exportEvents';
 import { useAppStore } from '../../src/store/useAppStore';
 import { BackButton } from '../../src/ui/BackButton';
 import { colors, radius, sizes, spacing } from '../../src/theme/tokens';
@@ -38,8 +39,20 @@ export default function Teacher() {
   const catalog = useAppStore((s) => s.catalog);
   const refreshCatalog = useAppStore((s) => s.refreshCatalog);
   const [busy, setBusy] = useState(false);
+  const [counts, setCounts] = useState<EventCounts | null>(null);
 
   const packs = catalog?.packs ?? [];
+
+  // Превью «что выгрузится»: число событий и ошибок (взрослому, чтобы понимал объём).
+  useEffect(() => {
+    let active = true;
+    void getEventCounts().then((c) => {
+      if (active) setCounts(c);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const onImport = async () => {
     if (busy) return;
@@ -73,6 +86,19 @@ export default function Teacher() {
       await exportAndSharePack(packId);
     } catch (e) {
       Alert.alert('Partage échoué', String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onExportData = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await exportEventsToFile();
+      setCounts({ events: res.events, errors: res.errors });
+    } catch (e) {
+      Alert.alert('Export échoué', String(e));
     } finally {
       setBusy(false);
     }
@@ -121,6 +147,21 @@ export default function Teacher() {
             </Pressable>
           </View>
         ))}
+
+        <Text style={[styles.section, styles.sectionSpaced]}>Diagnostic</Text>
+        <Pressable
+          onPress={onExportData}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Exporter les données d'usage anonymes"
+          style={({ pressed }) => [styles.exportBtn, pressed && styles.pressed, busy && styles.disabled]}
+        >
+          <Text style={styles.exportLabel}>⤓ Exporter les données</Text>
+        </Pressable>
+        <Text style={styles.note}>
+          Statistiques d&apos;usage anonymes (aucun nom, aucune donnée personnelle)
+          {counts ? ` · ${counts.events} événements, ${counts.errors} erreurs` : ''}.
+        </Text>
       </ScrollView>
 
       <BackButton onPress={() => router.back()} />
@@ -152,6 +193,17 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginBottom: spacing.sm,
   },
+  sectionSpaced: { marginTop: spacing.xl },
+  exportBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  exportLabel: { color: colors.onAccent, fontSize: 18, fontWeight: '800' },
+  note: { fontSize: 13, color: colors.textTeacher, opacity: 0.6, lineHeight: 18 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

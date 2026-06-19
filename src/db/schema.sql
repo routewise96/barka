@@ -35,6 +35,12 @@ CREATE TABLE IF NOT EXISTS installed_packs (
   installed_at INTEGER
 );
 
+-- migration v4: устойчивые key/value метаданные приложения (анонимный device_id для экспорта).
+CREATE TABLE IF NOT EXISTS app_meta (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
 -- Индексы под типовые выборки (прогресс/события по профилю).
 CREATE INDEX IF NOT EXISTS idx_progress_profile ON progress (profile_id);
 CREATE INDEX IF NOT EXISTS idx_events_profile ON events (profile_id);

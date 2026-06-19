@@ -25,6 +25,7 @@ const REGISTRY = {
   packFormat: 'content/packFormat.ts',
   catalogPolicy: 'content/catalogPolicy.ts',
   safeLog: 'db/safeLog.ts',
+  exportPayload: 'diagnostics/exportPayload.ts',
 };
 
 function transpileFile(name) {
@@ -53,6 +54,7 @@ export function loadAll() {
     packFormat: req('./packFormat.js'),
     catalogPolicy: req('./catalogPolicy.js'),
     safeLog: req('./safeLog.js'),
+    exportPayload: req('./exportPayload.js'),
   };
 }
 
