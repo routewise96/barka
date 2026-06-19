@@ -9,6 +9,7 @@ import { Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { configureAudioForPlayback } from '../src/audio/player';
 import { colors } from '../src/theme/tokens';
 import { useAppStore } from '../src/store/useAppStore';
 
@@ -18,6 +19,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     void initialize();
+    // Разово настраиваем аудио-режим до первого проигрывания (идемпотентно,
+    // не блокирует UI). Детали политики — в configureAudioForPlayback.
+    void configureAudioForPlayback();
   }, [initialize]);
 
   if (!initialized) {

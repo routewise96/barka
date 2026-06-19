@@ -65,8 +65,14 @@ export function stop(): void {
 export async function configureAudioForPlayback(): Promise<void> {
   try {
     await setAudioModeAsync({
-      playsInSilentMode: true, // iOS: играть даже в «беззвучном» режиме
-      shouldPlayInBackground: false, // звук только когда экран активен
+      // Играть даже в «тихом» режиме телефона: родитель/ребёнок не поймёт, почему
+      // молчит обучающее приложение (iOS-семантика silent switch).
+      playsInSilentMode: true,
+      // Не глушить чужое аудио намертво — лишь приглушать на время наших коротких
+      // озвучек и возвращать громкость (мягкая фокус-политика на Android/iOS).
+      interruptionMode: 'duckOthers',
+      // Звук только при активном экране — в фоне не играем.
+      shouldPlayInBackground: false,
     });
   } catch {
     // намеренно тихо: настройка сессии не критична для запуска
