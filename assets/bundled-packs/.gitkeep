@@ -1,0 +1,2 @@
+# Bundled-паки (вшиты в APK). Заполняется контент-пайплайном (tools/, раздел 8).
+# Пример: core_fr/{manifest.json, images/, audio/}
