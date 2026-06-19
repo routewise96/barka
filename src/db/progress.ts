@@ -121,10 +121,10 @@ export async function logEvent(
 // Установленные паки (зеркало того, что распаковано в documentDirectory)
 // ---------------------------------------------------------------------------
 
-/** Отмечает пак установленным/обновлённым (UPSERT по версии). */
+/** Отмечает пак установленным/обновлённым (UPSERT по версии). version — semver-строка. */
 export async function markPackInstalled(
   packId: string,
-  version: number,
+  version: string,
   installedAt: number = Date.now(),
 ): Promise<void> {
   const db = await getDb();
@@ -137,10 +137,10 @@ export async function markPackInstalled(
   );
 }
 
-/** Версия установленного пака или null, если не установлен. */
-export async function getInstalledPackVersion(packId: string): Promise<number | null> {
+/** Версия (semver-строка) установленного пака или null, если не установлен. */
+export async function getInstalledPackVersion(packId: string): Promise<string | null> {
   const db = await getDb();
-  const row = await db.getFirstAsync<{ version: number }>(
+  const row = await db.getFirstAsync<{ version: string }>(
     'SELECT version FROM installed_packs WHERE pack_id = ?;',
     packId,
   );

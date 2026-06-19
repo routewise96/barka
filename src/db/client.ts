@@ -17,7 +17,7 @@ import * as SQLite from 'expo-sqlite';
 const DB_NAME = 'barka.db';
 
 /** Целевая версия схемы. Поднимать при добавлении миграции. */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 /**
  * Миграции по индексу: MIGRATIONS[0] переводит схему с v0 на v1 и т.д.
@@ -57,6 +57,18 @@ const MIGRATIONS: string[] = [
 
   CREATE INDEX IF NOT EXISTS idx_progress_profile ON progress (profile_id);
   CREATE INDEX IF NOT EXISTS idx_events_profile ON events (profile_id);
+  `,
+  // --- v2: version пака — теперь semver-строка (TEXT), не INTEGER ---
+  // Пересоздаём installed_packs с TEXT. Это лишь ЗЕРКАЛО распакованного контента
+  // (для idempotency bootstrap), реальных пользовательских данных нет — потеря
+  // строк безопасна: bundled-паки переразложатся при следующем старте.
+  `
+  DROP TABLE IF EXISTS installed_packs;
+  CREATE TABLE IF NOT EXISTS installed_packs (
+    pack_id TEXT PRIMARY KEY,
+    version TEXT,
+    installed_at INTEGER
+  );
   `,
 ];
 

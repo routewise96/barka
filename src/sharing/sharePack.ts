@@ -1,18 +1,24 @@
 /**
- * src/sharing/sharePack.ts — приём/передача пака между устройствами (Фаза 2).
- * ЗАГЛУШКА каркаса.
+ * src/sharing/sharePack.ts — передача пака между устройствами.
  *
- * Передача папки пака по WiFi Direct. Приёмник кладёт папку в packs/ и зовёт
- * useAppStore.refreshCatalog() — обновление КОДА не требуется (раздел 7).
+ * ИСТОРИЯ: изначально планировалась передача пака КАК ПАПКИ по WiFi Direct. Внешний
+ * ревью показал, что реальные офлайн-транспорты (Bluetooth/Xender/SHAREit/SD) передают
+ * ОДИН ФАЙЛ, а не папку. Поэтому формат дистрибуции — один архив .barka (ZIP), а вся
+ * логика живёт в src/content/packArchive.ts. Эти тонкие обёртки сохранены для совместимости
+ * вызовов и делегируют туда.
+ *
+ * Приёмник после импорта обязан позвать useAppStore.refreshCatalog() — обновление КОДА
+ * по-прежнему не требуется (раздел 7), меняется лишь единица передачи: файл вместо папки.
  */
-import type { PackManifest } from '../content/types';
+import { exportAndSharePack, pickAndImportPack } from '../content/packArchive';
+import type { ImportResult } from '../content/packArchive';
 
-/** Отправить папку пака на другое устройство. */
-export async function sendPack(_packId: string): Promise<void> {
-  throw new Error('sharing/sharePack.sendPack: не реализовано (Фаза 2)');
+/** Экспортировать пак в .barka и отдать через системный Share intent. */
+export async function sendPack(packId: string): Promise<void> {
+  return exportAndSharePack(packId);
 }
 
-/** Принять папку пака и положить её в packs/. Возвращает манифест принятого пака. */
-export async function receivePack(): Promise<PackManifest> {
-  throw new Error('sharing/sharePack.receivePack: не реализовано (Фаза 2)');
+/** Выбрать .barka через file picker и импортировать. null — пользователь отменил. */
+export async function receivePack(): Promise<ImportResult | null> {
+  return pickAndImportPack();
 }

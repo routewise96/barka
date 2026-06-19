@@ -51,8 +51,8 @@ Choice {
   correct?: boolean             // для числовых/буквенных игр
 }
 
-### 3.2 Структура паков на диске
-Каждый пак — самодостаточная папка, её можно передать целиком по Bluetooth/WiFi Direct/SD, приложение подхватит.
+### 3.2 Структура паков на диске и формат дистрибуции
+На диске пак — самодостаточная папка:
 <documentDirectory>/barka/packs/
   core_fr/
     manifest.json
@@ -61,15 +61,28 @@ Choice {
   core_mos/ ...
   numbers_basic/ ...
 
+Для ПЕРЕДАЧИ телефон-к-телефону папка не годится: реальные офлайн-транспорты
+(Bluetooth/Xender/SHAREit/SD) передают ОДИН ФАЙЛ. Поэтому единица дистрибуции —
+архив **.barka** (обычный ZIP с тем же содержимым). Экспорт/импорт — в
+src/content/packArchive.ts (упаковка fflate, проверка целостности по contentHash,
+версия схемы). Экспорт отдаётся через системный Share intent (expo-sharing), импорт —
+через file picker (expo-document-picker); автоскан папок не делается из-за Scoped Storage.
+
 ### 3.3 Манифест пака
 PackManifest {
   packId: string
-  version: number
+  schemaVersion?: number   // версия СХЕМЫ манифеста; нет → legacy v1. SUPPORTED_SCHEMA_VERSION в packFormat.ts
+  version: string          // версия КОНТЕНТА, semver ("1.2.0"); политика обновления при коллизии packId
   lang: string
   displayName: string
   sizeBytes: number
+  contentHash?: string     // "sha256:<hex>" по всем файлам кроме manifest.json — целостность после передачи
+  dependencies?: string[]  // РЕЗЕРВ на будущее, сейчас всегда []
   items: ContentItem[]
 }
+contentHash и упаковка считаются ОДНИМ кодом (src/content/sha256.ts + packFormat.ts)
+на устройстве и в Node-скриптах (генерация манифеста + round-trip тест) — без нативных
+модулей, поэтому хэши гарантированно совпадают.
 
 ### 3.4 Bundled vs side-loaded
 - Bundled-паки: минимальный набор, кладутся в assets/, при первом запуске копируются в documentDirectory. Гарантия работы сразу после установки без интернета.

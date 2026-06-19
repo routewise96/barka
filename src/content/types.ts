@@ -55,10 +55,33 @@ export interface ContentItem {
 /** Манифест пака — описание самодостаточной папки контента (раздел 3.3). */
 export interface PackManifest {
   packId: string;
-  version: number;
+  /**
+   * Версия СХЕМЫ манифеста (не контента). Определяет, понимает ли эта сборка
+   * приложения форму манифеста. Отсутствует → трактуется как legacy v1.
+   * См. SUPPORTED_SCHEMA_VERSION и checkSchemaVersion в packFormat.ts.
+   */
+  schemaVersion?: number;
+  /**
+   * Версия КОНТЕНТА пака — semver-строка ("1.2.0"). Используется политикой
+   * обновления при коллизии packId (не затирать новее старым). Допускается
+   * число (legacy) — compareVersions это понимает.
+   */
+  version: string;
   lang: string;
   displayName: string;
   sizeBytes: number;
+  /**
+   * Хэш СОДЕРЖИМОГО пака (`sha256:<hex>`) — проверка целостности после передачи
+   * телефон-к-телефону (Bluetooth оборвался / SD побилась). Считается по всем
+   * файлам кроме manifest.json. См. computeContentHash в packFormat.ts.
+   * Опционален для forward-compat; при наличии — сверяется на импорте.
+   */
+  contentHash?: string;
+  /**
+   * РЕЗЕРВ на будущее: контентные зависимости (story-пак ← audio-language-пак).
+   * Сейчас ВСЕГДА []. Логика разрешения зависимостей пока не реализована.
+   */
+  dependencies?: string[];
   items: ContentItem[];
 }
 

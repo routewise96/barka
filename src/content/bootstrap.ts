@@ -20,6 +20,7 @@ import { Directory, File } from 'expo-file-system';
 
 import { getInstalledPackVersion, markPackInstalled } from '../db/progress';
 import { ensurePacksRoot, packsRoot } from './catalog';
+import { compareVersions } from './packFormat';
 import type { PackManifest } from './types';
 
 /**
@@ -194,8 +195,8 @@ export async function bootstrapBundledPacks(): Promise<Set<string>> {
     installed.add(packId);
 
     const current = await getInstalledPackVersion(packId);
-    if (current !== null && current >= version) {
-      // Уже распакован и не старее — пропускаем.
+    if (current !== null && compareVersions(current, version) >= 0) {
+      // Уже распакован и не старее — пропускаем (semver-сравнение).
       continue;
     }
 

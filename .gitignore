@@ -37,6 +37,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# transient build dir for Node-side TS loading in scripts (loadTs.mjs)
+scripts/.tmp-ts-build/
+
 app-example
 
 # generated native folders

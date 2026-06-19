@@ -9,6 +9,7 @@
  */
 import { Directory, File, Paths } from 'expo-file-system';
 
+import { checkSchemaVersion, isValidManifestShape } from './packFormat';
 import type { Catalog, CatalogEntry, ContentType, Lang, PackManifest, ResolvedPack } from './types';
 
 /** Имя корневой папки приложения в documentDirectory. */
@@ -55,7 +56,18 @@ export async function scanCatalog(bundledPackIds: ReadonlySet<string> = new Set(
       // Невалидный JSON — пропускаем пак, не падаем.
       continue;
     }
-    if (!isValidManifest(manifest)) continue;
+    if (!isValidManifestShape(manifest)) continue;
+
+    // Версия схемы (часть 1): пак из будущей версии формата — мягко пропускаем,
+    // не роняя каталог. (В будущем UI: «обновите Barka».)
+    const schema = checkSchemaVersion(manifest);
+    if (!schema.ok) {
+      console.warn(`[catalog] пропущен пак ${manifest.packId}: ${schema.detail}`);
+      continue;
+    }
+    if (schema.legacy) {
+      console.warn(`[catalog] пак ${manifest.packId} без schemaVersion — трактуется как legacy v1`);
+    }
 
     packs.push({
       manifest,
@@ -102,15 +114,4 @@ export function entriesByLang(catalog: Catalog, lang: Lang): CatalogEntry[] {
 
 function withTrailingSlash(uri: string): string {
   return uri.endsWith('/') ? uri : uri + '/';
-}
-
-/** Минимальная валидация формы манифеста перед доверием к нему. */
-function isValidManifest(m: unknown): m is PackManifest {
-  if (typeof m !== 'object' || m === null) return false;
-  const c = m as Partial<PackManifest>;
-  return (
-    typeof c.packId === 'string' &&
-    typeof c.version === 'number' &&
-    Array.isArray(c.items)
-  );
 }

@@ -25,9 +25,10 @@ CREATE TABLE IF NOT EXISTS events (
   created_at INTEGER
 );
 
+-- version — semver-строка контента пака ("1.2.0"); migration v2 сменил тип с INTEGER на TEXT.
 CREATE TABLE IF NOT EXISTS installed_packs (
   pack_id TEXT PRIMARY KEY,
-  version INTEGER,
+  version TEXT,
   installed_at INTEGER
 );
 

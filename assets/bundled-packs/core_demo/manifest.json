@@ -1,9 +1,12 @@
 {
   "packId": "core_demo",
-  "version": 1,
+  "schemaVersion": 1,
+  "version": "1.0.0",
   "lang": "fr",
   "displayName": "Barka — Pack de demonstration (FR)",
   "sizeBytes": 465941,
+  "contentHash": "sha256:45de903522dce97b4075ece75a56b4992b41d97dca5fbe7aeddbb2a48d2e0fed",
+  "dependencies": [],
   "items": [
     {
       "id": "story_fr_demo_001",

@@ -10,7 +10,8 @@
  */
 import { useRouter, type Href } from 'expo-router';
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { entriesByType, resolveAssetUri } from '../src/content/catalog';
 import type { Catalog, ContentType } from '../src/content/types';
@@ -18,7 +19,7 @@ import { shareAppLink } from '../src/sharing/shareAppLink';
 import { useAppStore } from '../src/store/useAppStore';
 import { BigButton } from '../src/ui/BigButton';
 import { ShareButton } from '../src/ui/ShareButton';
-import { colors, sizes, spacing } from '../src/theme/tokens';
+import { colors, radius, sizes, spacing } from '../src/theme/tokens';
 
 interface SectionDef {
   type: ContentType;
@@ -41,6 +42,7 @@ function sectionThumb(catalog: Catalog, type: ContentType): string | undefined {
 
 export default function Home() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const catalog = useAppStore((s) => s.catalog);
   const ensureProfile = useAppStore((s) => s.ensureProfile);
 
@@ -74,6 +76,21 @@ export default function Home() {
 
       {/* Взрослое действие: поделиться ссылкой на приложение. Не мешает плиткам. */}
       <ShareButton onPress={() => void shareAppLink()} />
+
+      {/* Дискретная точка входа в «уголок для взрослых» (импорт/экспорт паков). */}
+      <Pressable
+        onPress={() => router.push('/teacher')}
+        accessibilityRole="button"
+        accessibilityLabel="Espace adulte"
+        hitSlop={spacing.sm}
+        style={({ pressed }) => [
+          styles.adultBtn,
+          { top: insets.top + spacing.md, left: spacing.md },
+          pressed && { opacity: 0.85 },
+        ]}
+      >
+        <Text style={styles.adultGlyph}>⚙</Text>
+      </Pressable>
     </View>
   );
 }
@@ -93,5 +110,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.xl,
     padding: spacing.lg,
+  },
+  adultBtn: {
+    position: 'absolute',
+    zIndex: 10,
+    width: sizes.back,
+    height: sizes.back,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adultGlyph: {
+    fontSize: sizes.backGlyph,
+    lineHeight: sizes.backGlyph,
+    color: colors.ink,
   },
 });
