@@ -1,27 +1,101 @@
 /**
- * src/ui/BigButton.tsx — крупная тач-цель (мин 64dp), картинка + звук при нажатии.
- * ЗАГЛУШКА каркаса (шаг 5 раздела 10). Сигнатура задана, оформление — позже.
+ * src/ui/BigButton.tsx — крупная тач-цель (UX-контракт раздела 6, пп. 2, 3).
+ *
+ *  - Картинка/иконка на скруглённой плоской поверхности; минимум 64dp,
+ *    по умолчанию крупнее (sizes.bigButton).
+ *  - Мгновенная визуальная реакция на тап: лёгкое масштабирование + затемнение
+ *    (press-state, без тяжёлых анимаций — дёшево для слабого GPU).
+ *  - Опциональный звук при нажатии (через singleton-плеер: один звук одновременно).
+ *
+ * Принимает уже разрешённый file:// URI картинки (через resolveAssetUri).
  */
-import { Pressable, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { TOUCH_TARGET_MIN, sizes } from '../theme/tokens';
+import { playFromUri } from '../audio/player';
+import { TOUCH_TARGET_MIN, borders, colors, motion, radius, sizes } from '../theme/tokens';
 
 export interface BigButtonProps {
-  /** Абсолютный URI картинки кнопки. */
+  /** Абсолютный file:// URI картинки кнопки. */
   imageUri?: string;
-  /** Абсолютный URI звука, который проиграется при нажатии. */
+  /** Абсолютный file:// URI звука, который проиграется при нажатии. */
   soundUri?: string;
   onPress: () => void;
+  /** Сторона квадратной кнопки (по умолчанию sizes.bigButton). Не меньше 64dp. */
+  size?: number;
+  /** Цвет рамки-подсветки (напр. обратная связь выбора). Без значения — рамки нет. */
+  highlightColor?: string;
+  /** Подпись для скринридера/режима учителя (детям текст не показывается). */
+  accessibilityLabel?: string;
 }
 
-export function BigButton({ onPress }: BigButtonProps) {
+export function BigButton({
+  imageUri,
+  soundUri,
+  onPress,
+  size = sizes.bigButton,
+  highlightColor,
+  accessibilityLabel,
+}: BigButtonProps) {
+  const side = Math.max(size, TOUCH_TARGET_MIN);
+
+  const handlePress = () => {
+    // Звук — сразу при нажатии, чтобы реакция ощущалась мгновенной.
+    if (soundUri) void playFromUri(soundUri);
+    onPress();
+  };
+
+  const box: ViewStyle = {
+    width: side,
+    height: side,
+    borderRadius: radius.lg,
+    borderWidth: highlightColor ? borders.feedback : 0,
+    borderColor: highlightColor ?? 'transparent',
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       hitSlop={8}
-      style={{ minWidth: TOUCH_TARGET_MIN, minHeight: TOUCH_TARGET_MIN }}
+      style={({ pressed }) => [
+        styles.base,
+        box,
+        pressed && { transform: [{ scale: motion.pressScale }], opacity: 0.9 },
+      ]}
     >
-      <View style={{ width: sizes.bigButton, height: sizes.bigButton }} />
+      {imageUri ? (
+        <Image
+          source={{ uri: imageUri }}
+          style={styles.image}
+          contentFit="cover"
+          cachePolicy="memory"
+          transition={0}
+        />
+      ) : (
+        <View style={styles.placeholder} />
+      )}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  base: {
+    minWidth: TOUCH_TARGET_MIN,
+    minHeight: TOUCH_TARGET_MIN,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.surface,
+  },
+});

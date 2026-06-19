@@ -1,22 +1,96 @@
 /**
- * src/audio/player.ts — обёртка над expo-audio. ЗАГЛУШКА каркаса.
+ * src/audio/player.ts — singleton-менеджер аудио поверх expo-audio (SDK 54).
  *
- * Контракт (раздел 6, п.7): одновременно звучит ТОЛЬКО один звук. Новый play()
- * останавливает предыдущий. Реализация — шаг 7 раздела 10 на базе expo-audio
- * (createAudioPlayer / AudioPlayer), НЕ expo-av (он deprecated в SDK 54).
+ * Гарантия раздела 6, п.7: одновременно жив МАКСИМУМ один звук. Новый play()
+ * сначала останавливает и освобождает предыдущий, потом создаёт новый.
+ *
+ * ── Почему createAudioPlayer, а НЕ хук useAudioPlayer ───────────────────────
+ * Хук нельзя переинициализировать из обычной функции и нельзя на лету подменить
+ * трек у живого плеера. Для «ровно один активный звук + без утечек» нужен
+ * императивный контроль жизненного цикла: createAudioPlayer(...) даёт объект,
+ * которым мы владеем и который сами .remove() освобождаем. Поэтому менеджер
+ * держит ссылку на текущий плеер и пересоздаёт его при смене трека.
+ *
+ * ── БАГ RELEASE-СБОРКИ (важно, не регрессировать) ───────────────────────────
+ * useAudioPlayer(require('./file')) / createAudioPlayer(require(...)) работает в
+ * dev, но МОЛЧА не грузит звук в release APK. Поэтому здесь принимаем ТОЛЬКО
+ * file:// URI (ассет уже распакован в documentDirectory слоем bootstrap, путь
+ * приходит из resolveAssetUri). НИКОГДА не передаём require()-модуль в плеер.
+ *
+ * ── Авто-сброс позиции ──────────────────────────────────────────────────────
+ * expo-audio НЕ перематывает в начало по окончании. Для UX «звук играет при
+ * входе на экран» при повторном проигрывании того же трека делаем seekTo(0).
  */
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
-/** Проиграть звук по абсолютному URI, остановив текущий. */
-export async function play(_uri: string): Promise<void> {
-  throw new Error('audio/player.play: не реализовано (каркас)');
+/** Текущий (единственный) живой плеер и URI его трека. */
+let current: AudioPlayer | null = null;
+let currentUri: string | null = null;
+
+/**
+ * Проиграть звук по абсолютному file:// URI, оставив живым ровно один плеер.
+ *  - тот же URI и плеер ещё жив → seekTo(0) + play() (перезапуск без пересоздания);
+ *  - другой URI → освободить текущий, создать новый, play().
+ *
+ * @param uri ТОЛЬКО file:// URI из resolveAssetUri (см. баг release-сборки выше).
+ */
+export async function playFromUri(uri: string): Promise<void> {
+  // Тот же трек ещё в памяти — просто перематываем в начало и играем заново.
+  if (current && currentUri === uri) {
+    await current.seekTo(0);
+    current.play();
+    return;
+  }
+
+  // Другой трек — гасим и освобождаем предыдущий, затем создаём новый.
+  releaseCurrent();
+
+  const player = createAudioPlayer({ uri });
+  player.volume = 1.0;
+  current = player;
+  currentUri = uri;
+  player.play();
 }
 
-/** Остановить текущий звук, если он играет. */
-export async function stop(): Promise<void> {
-  throw new Error('audio/player.stop: не реализовано (каркас)');
+/** Остановить и освободить текущий звук (если есть). После — ни одного живого плеера. */
+export function stop(): void {
+  releaseCurrent();
 }
 
-/** Предзагрузить звук, чтобы реакция на нажатие была < 100мс (раздел 6, п.3). */
-export async function preload(_uri: string): Promise<void> {
-  throw new Error('audio/player.preload: не реализовано (каркас)');
+/**
+ * Разовая настройка аудио-сессии под воспроизведение коротких озвучек.
+ * Зовётся один раз при инициализации приложения (шаг 6/7). Идемпотентна,
+ * ошибки проглатываются — без звука приложение всё равно работает.
+ */
+export async function configureAudioForPlayback(): Promise<void> {
+  try {
+    await setAudioModeAsync({
+      playsInSilentMode: true, // iOS: играть даже в «беззвучном» режиме
+      shouldPlayInBackground: false, // звук только когда экран активен
+    });
+  } catch {
+    // намеренно тихо: настройка сессии не критична для запуска
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Внутреннее
+// ---------------------------------------------------------------------------
+
+/** Останавливает и освобождает текущий плеер; гарантирует отсутствие утечки. */
+function releaseCurrent(): void {
+  if (!current) return;
+  const player = current;
+  current = null;
+  currentUri = null;
+  try {
+    player.pause();
+  } catch {
+    // плеер мог быть уже освобождён — игнорируем
+  }
+  try {
+    player.remove(); // освобождает нативный ресурс (SharedObject)
+  } catch {
+    // повторный release безопасно игнорируем
+  }
 }
