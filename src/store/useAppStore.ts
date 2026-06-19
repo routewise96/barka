@@ -11,6 +11,7 @@ import { bootstrapBundledPacks } from '../content/bootstrap';
 import { scanCatalog } from '../content/catalog';
 import type { Catalog, Lang } from '../content/types';
 import { getDb } from '../db/client';
+import { createProfile, listProfiles } from '../db/progress';
 
 interface AppState {
   /** Инициализация завершена (БД + паки + каталог готовы). */
@@ -28,6 +29,11 @@ interface AppState {
   initialize: () => Promise<void>;
   /** Пересобрать каталог (напр. после приёма side-loaded пака). */
   refreshCatalog: () => Promise<void>;
+  /**
+   * Возвращает id активного профиля, молча создавая единственный дефолтный,
+   * если его ещё нет (MVP без экрана выбора профиля — раздел 6, шаг 6).
+   */
+  ensureProfile: () => Promise<number>;
   setCurrentProfile: (id: number | null) => void;
   setLang: (lang: Lang) => void;
 }
@@ -56,6 +62,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     const bundledIds = await bootstrapBundledPacks();
     const catalog = await scanCatalog(bundledIds);
     set({ catalog });
+  },
+
+  ensureProfile: async () => {
+    const existing = get().currentProfileId;
+    if (existing != null) return existing;
+    // Один дефолтный профиль на устройство (выбор профиля — позже).
+    const profiles = await listProfiles();
+    const id = profiles[0]?.id ?? (await createProfile('Enfant', 'default'));
+    set({ currentProfileId: id });
+    return id;
   },
 
   setCurrentProfile: (id) => set({ currentProfileId: id }),

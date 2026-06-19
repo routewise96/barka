@@ -1,13 +1,9 @@
 /**
- * app/sections/stories.tsx — список сказок по языкам. ЗАГЛУШКА каркаса.
- * Источник данных: entriesByType(catalog, 'story') из src/content/catalog.ts.
+ * app/sections/stories.tsx — раздел «Сказки». Тонкая обёртка над SectionScreen.
+ * Источник данных: entriesByType(catalog, 'story').
  */
-import { Text, View } from 'react-native';
+import { SectionScreen } from '../../src/screens/SectionScreen';
 
 export default function Stories() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Сказки — заглушка</Text>
-    </View>
-  );
+  return <SectionScreen type="story" />;
 }

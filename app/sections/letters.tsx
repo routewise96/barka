@@ -1,13 +1,9 @@
 /**
- * app/sections/letters.tsx — алфавит. ЗАГЛУШКА каркаса.
+ * app/sections/letters.tsx — раздел «Алфавит». Тонкая обёртка над SectionScreen.
  * Источник данных: entriesByType(catalog, 'letter').
  */
-import { Text, View } from 'react-native';
+import { SectionScreen } from '../../src/screens/SectionScreen';
 
 export default function Letters() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Буквы — заглушка</Text>
-    </View>
-  );
+  return <SectionScreen type="letter" />;
 }
