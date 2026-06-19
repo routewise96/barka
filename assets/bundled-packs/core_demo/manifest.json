@@ -1,0 +1,386 @@
+{
+  "packId": "core_demo",
+  "version": 1,
+  "lang": "fr",
+  "displayName": "Barka — Pack de demonstration (FR)",
+  "sizeBytes": 465941,
+  "items": [
+    {
+      "id": "story_fr_demo_001",
+      "type": "story",
+      "lang": "fr",
+      "title": "Le Lion et la Souris (demo)",
+      "pack": "core_demo",
+      "cover": "images/cover_story_fr_demo_001.webp",
+      "pages": [
+        {
+          "image": "images/story_fr_demo_001_p1.webp",
+          "audio": "audio/story_fr_demo_001_p1.opus"
+        },
+        {
+          "image": "images/story_fr_demo_001_p2.webp",
+          "audio": "audio/story_fr_demo_001_p2.opus",
+          "choices": [
+            {
+              "image": "images/story_fr_demo_001_p2_c1.webp",
+              "audio": "audio/story_fr_demo_001_p2_c1.opus",
+              "correct": true
+            },
+            {
+              "image": "images/story_fr_demo_001_p2_c2.webp",
+              "audio": "audio/story_fr_demo_001_p2_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/story_fr_demo_001_p2_c3.webp",
+              "audio": "audio/story_fr_demo_001_p2_c3.opus",
+              "correct": false
+            }
+          ]
+        },
+        {
+          "image": "images/story_fr_demo_001_p3.webp",
+          "audio": "audio/story_fr_demo_001_p3.opus"
+        },
+        {
+          "image": "images/story_fr_demo_001_p4.webp",
+          "audio": "audio/story_fr_demo_001_p4.opus",
+          "choices": [
+            {
+              "image": "images/story_fr_demo_001_p4_c1.webp",
+              "audio": "audio/story_fr_demo_001_p4_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/story_fr_demo_001_p4_c2.webp",
+              "audio": "audio/story_fr_demo_001_p4_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/story_fr_demo_001_p4_c3.webp",
+              "audio": "audio/story_fr_demo_001_p4_c3.opus",
+              "correct": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "story_fr_demo_002",
+      "type": "story",
+      "lang": "fr",
+      "title": "La Pluie (demo)",
+      "pack": "core_demo",
+      "cover": "images/cover_story_fr_demo_002.webp",
+      "pages": [
+        {
+          "image": "images/story_fr_demo_002_p1.webp",
+          "audio": "audio/story_fr_demo_002_p1.opus"
+        },
+        {
+          "image": "images/story_fr_demo_002_p2.webp",
+          "audio": "audio/story_fr_demo_002_p2.opus"
+        },
+        {
+          "image": "images/story_fr_demo_002_p3.webp",
+          "audio": "audio/story_fr_demo_002_p3.opus"
+        }
+      ]
+    },
+    {
+      "id": "story_fr_demo_003",
+      "type": "story",
+      "lang": "fr",
+      "title": "Le Baobab (demo)",
+      "pack": "core_demo",
+      "cover": "images/cover_story_fr_demo_003.webp",
+      "pages": [
+        {
+          "image": "images/story_fr_demo_003_p1.webp",
+          "audio": "audio/story_fr_demo_003_p1.opus"
+        },
+        {
+          "image": "images/story_fr_demo_003_p2.webp",
+          "audio": "audio/story_fr_demo_003_p2.opus"
+        },
+        {
+          "image": "images/story_fr_demo_003_p3.webp",
+          "audio": "audio/story_fr_demo_003_p3.opus"
+        },
+        {
+          "image": "images/story_fr_demo_003_p4.webp",
+          "audio": "audio/story_fr_demo_003_p4.opus"
+        },
+        {
+          "image": "images/story_fr_demo_003_p5.webp",
+          "audio": "audio/story_fr_demo_003_p5.opus",
+          "choices": [
+            {
+              "image": "images/story_fr_demo_003_p5_c1.webp",
+              "audio": "audio/story_fr_demo_003_p5_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/story_fr_demo_003_p5_c2.webp",
+              "audio": "audio/story_fr_demo_003_p5_c2.opus",
+              "correct": true
+            },
+            {
+              "image": "images/story_fr_demo_003_p5_c3.webp",
+              "audio": "audio/story_fr_demo_003_p5_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "number_fr_001",
+      "type": "number",
+      "lang": "fr",
+      "title": "Compter: 1",
+      "pack": "core_demo",
+      "cover": "images/cover_number_fr_001.webp",
+      "pages": [
+        {
+          "image": "images/number_fr_001_p1.webp",
+          "audio": "audio/number_fr_001_p1.opus",
+          "choices": [
+            {
+              "image": "images/number_fr_001_p1_c1.webp",
+              "audio": "audio/number_fr_001_p1_c1.opus",
+              "correct": true
+            },
+            {
+              "image": "images/number_fr_001_p1_c2.webp",
+              "audio": "audio/number_fr_001_p1_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_001_p1_c3.webp",
+              "audio": "audio/number_fr_001_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "number_fr_002",
+      "type": "number",
+      "lang": "fr",
+      "title": "Compter: 2",
+      "pack": "core_demo",
+      "cover": "images/cover_number_fr_002.webp",
+      "pages": [
+        {
+          "image": "images/number_fr_002_p1.webp",
+          "audio": "audio/number_fr_002_p1.opus",
+          "choices": [
+            {
+              "image": "images/number_fr_002_p1_c1.webp",
+              "audio": "audio/number_fr_002_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_002_p1_c2.webp",
+              "audio": "audio/number_fr_002_p1_c2.opus",
+              "correct": true
+            },
+            {
+              "image": "images/number_fr_002_p1_c3.webp",
+              "audio": "audio/number_fr_002_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "number_fr_003",
+      "type": "number",
+      "lang": "fr",
+      "title": "Compter: 3",
+      "pack": "core_demo",
+      "cover": "images/cover_number_fr_003.webp",
+      "pages": [
+        {
+          "image": "images/number_fr_003_p1.webp",
+          "audio": "audio/number_fr_003_p1.opus",
+          "choices": [
+            {
+              "image": "images/number_fr_003_p1_c1.webp",
+              "audio": "audio/number_fr_003_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_003_p1_c2.webp",
+              "audio": "audio/number_fr_003_p1_c2.opus",
+              "correct": true
+            },
+            {
+              "image": "images/number_fr_003_p1_c3.webp",
+              "audio": "audio/number_fr_003_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "number_fr_004",
+      "type": "number",
+      "lang": "fr",
+      "title": "Compter: 4",
+      "pack": "core_demo",
+      "cover": "images/cover_number_fr_004.webp",
+      "pages": [
+        {
+          "image": "images/number_fr_004_p1.webp",
+          "audio": "audio/number_fr_004_p1.opus",
+          "choices": [
+            {
+              "image": "images/number_fr_004_p1_c1.webp",
+              "audio": "audio/number_fr_004_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_004_p1_c2.webp",
+              "audio": "audio/number_fr_004_p1_c2.opus",
+              "correct": true
+            },
+            {
+              "image": "images/number_fr_004_p1_c3.webp",
+              "audio": "audio/number_fr_004_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "number_fr_005",
+      "type": "number",
+      "lang": "fr",
+      "title": "Compter: 5",
+      "pack": "core_demo",
+      "cover": "images/cover_number_fr_005.webp",
+      "pages": [
+        {
+          "image": "images/number_fr_005_p1.webp",
+          "audio": "audio/number_fr_005_p1.opus",
+          "choices": [
+            {
+              "image": "images/number_fr_005_p1_c1.webp",
+              "audio": "audio/number_fr_005_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_005_p1_c2.webp",
+              "audio": "audio/number_fr_005_p1_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/number_fr_005_p1_c3.webp",
+              "audio": "audio/number_fr_005_p1_c3.opus",
+              "correct": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "letter_fr_a",
+      "type": "letter",
+      "lang": "fr",
+      "title": "Lettre A",
+      "pack": "core_demo",
+      "cover": "images/cover_letter_fr_a.webp",
+      "pages": [
+        {
+          "image": "images/letter_fr_a_p1.webp",
+          "audio": "audio/letter_fr_a_p1.opus",
+          "choices": [
+            {
+              "image": "images/letter_fr_a_p1_c1.webp",
+              "audio": "audio/letter_fr_a_p1_c1.opus",
+              "correct": true
+            },
+            {
+              "image": "images/letter_fr_a_p1_c2.webp",
+              "audio": "audio/letter_fr_a_p1_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/letter_fr_a_p1_c3.webp",
+              "audio": "audio/letter_fr_a_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "letter_fr_b",
+      "type": "letter",
+      "lang": "fr",
+      "title": "Lettre B",
+      "pack": "core_demo",
+      "cover": "images/cover_letter_fr_b.webp",
+      "pages": [
+        {
+          "image": "images/letter_fr_b_p1.webp",
+          "audio": "audio/letter_fr_b_p1.opus",
+          "choices": [
+            {
+              "image": "images/letter_fr_b_p1_c1.webp",
+              "audio": "audio/letter_fr_b_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/letter_fr_b_p1_c2.webp",
+              "audio": "audio/letter_fr_b_p1_c2.opus",
+              "correct": true
+            },
+            {
+              "image": "images/letter_fr_b_p1_c3.webp",
+              "audio": "audio/letter_fr_b_p1_c3.opus",
+              "correct": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "letter_fr_c",
+      "type": "letter",
+      "lang": "fr",
+      "title": "Lettre C",
+      "pack": "core_demo",
+      "cover": "images/cover_letter_fr_c.webp",
+      "pages": [
+        {
+          "image": "images/letter_fr_c_p1.webp",
+          "audio": "audio/letter_fr_c_p1.opus",
+          "choices": [
+            {
+              "image": "images/letter_fr_c_p1_c1.webp",
+              "audio": "audio/letter_fr_c_p1_c1.opus",
+              "correct": false
+            },
+            {
+              "image": "images/letter_fr_c_p1_c2.webp",
+              "audio": "audio/letter_fr_c_p1_c2.opus",
+              "correct": false
+            },
+            {
+              "image": "images/letter_fr_c_p1_c3.webp",
+              "audio": "audio/letter_fr_c_p1_c3.opus",
+              "correct": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
