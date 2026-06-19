@@ -6,9 +6,23 @@
  * statements — строковая конкатенация в SQL запрещена.
  */
 import { getDb } from './client';
+import { runSafely } from './safeLog';
 
-/** Типы событий, фиксируемые в таблице events. */
+/** Нормальные события прохождения, фиксируемые в таблице events. */
 export type EventType = 'open' | 'complete' | 'choice_correct' | 'choice_wrong';
+
+/**
+ * Типы ОШИБОЧНЫХ событий рантайма (часть 1). Пишутся той же events-таблицей с
+ * заполненным полем detail (что за файл/itemId/сообщение). Фундамент диагностики:
+ * по этим записям видно, что именно повредилось после установки.
+ */
+export type ErrorEventType =
+  | 'error_image' // картинка не загрузилась (onError expo-image)
+  | 'error_audio' // аудио не проигралось/файл недоступен
+  | 'error_manifest' // manifest.json битый/не проходит схему
+  | 'error_pack' // пак/элемент скрыт из-за отсутствующих файлов
+  | 'error_fs' // файловая операция провалилась (чтение/копирование/импорт)
+  | 'error_render'; // неперехваченная ошибка рендера (Error Boundary)
 
 export interface Profile {
   id: number;
@@ -115,6 +129,33 @@ export async function logEvent(
     eventType,
     createdAt,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Ошибочные события (диагностика graceful degradation)
+// ---------------------------------------------------------------------------
+
+/**
+ * Безопасно логирует ошибку рантайма в events. НИКОГДА не кидает (runSafely):
+ * если БД недоступна — молча проглатывает. Пишет локально в SQLite, без сети.
+ *
+ * @param type  тип ошибки (ErrorEventType).
+ * @param detail что именно сломалось: путь к файлу / itemId / packId / сообщение.
+ * profile_id и item_id оставляем NULL — ошибка может возникнуть до выбора профиля
+ * (скан каталога, bootstrap); вся информативная нагрузка идёт в detail.
+ */
+export async function logError(type: ErrorEventType, detail: string): Promise<void> {
+  await runSafely(`logError:${type}`, async () => {
+    const db = await getDb();
+    await db.runAsync(
+      'INSERT INTO events (profile_id, item_id, event_type, detail, created_at) VALUES (?, ?, ?, ?, ?);',
+      null,
+      null,
+      type,
+      detail,
+      Date.now(),
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------

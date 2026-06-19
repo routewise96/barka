@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS events (
   profile_id INTEGER,
   item_id TEXT,
   event_type TEXT,              -- "open" | "complete" | "choice_correct" | "choice_wrong"
+                                -- + ошибки: "error_image" | "error_audio" | "error_manifest"
+                                --           | "error_pack" | "error_fs" | "error_render"
+  detail TEXT,                  -- migration v3: детали ошибки (файл/itemId/сообщение); NULL для обычных событий
   created_at INTEGER
 );
 

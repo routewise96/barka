@@ -9,8 +9,10 @@
  */
 import { Directory, File, Paths } from 'expo-file-system';
 
+import { logError } from '../db/progress';
+import { selectItems, type AssetExists } from './catalogPolicy';
 import { checkSchemaVersion, isValidManifestShape } from './packFormat';
-import type { Catalog, CatalogEntry, ContentType, Lang, PackManifest, ResolvedPack } from './types';
+import type { Catalog, CatalogEntry, ContentItem, ContentType, Lang, PackManifest, ResolvedPack } from './types';
 
 /** Имя корневой папки приложения в documentDirectory. */
 export const APP_DIR = 'barka';
@@ -42,45 +44,68 @@ export async function scanCatalog(bundledPackIds: ReadonlySet<string> = new Set(
   const root = ensurePacksRoot();
 
   const packs: ResolvedPack[] = [];
+  // Отобранные (пригодные) элементы каждого пака — параллельно packs.
+  const keptByPack = new Map<ResolvedPack, ContentItem[]>();
+
   for (const entry of root.list()) {
     // Нас интересуют только подпапки-паки.
     if (!(entry instanceof Directory)) continue;
 
-    const manifestFile = new File(entry, 'manifest.json');
-    if (!manifestFile.exists) continue;
-
-    let manifest: PackManifest;
+    // Весь разбор пака — в try/catch: один битый пак не должен ронять весь каталог.
     try {
-      manifest = JSON.parse(await manifestFile.text()) as PackManifest;
-    } catch {
-      // Невалидный JSON — пропускаем пак, не падаем.
+      const manifestFile = new File(entry, 'manifest.json');
+      if (!manifestFile.exists) continue;
+
+      let manifest: PackManifest;
+      try {
+        manifest = JSON.parse(await manifestFile.text()) as PackManifest;
+      } catch {
+        // Невалидный JSON — пропускаем ЭТОТ пак, остальные строятся как обычно.
+        void logError('error_manifest', `${entry.uri}: невалидный JSON manifest.json`);
+        continue;
+      }
+      if (!isValidManifestShape(manifest)) {
+        void logError('error_manifest', `${entry.uri}: manifest не проходит схему`);
+        continue;
+      }
+
+      // Версия схемы (часть 1): пак из будущей версии формата — мягко пропускаем.
+      const schema = checkSchemaVersion(manifest);
+      if (!schema.ok) {
+        void logError('error_manifest', `${manifest.packId}: ${schema.detail}`);
+        continue;
+      }
+      if (schema.legacy) {
+        console.warn(`[catalog] пак ${manifest.packId} без schemaVersion — legacy v1`);
+      }
+
+      const pack: ResolvedPack = {
+        manifest,
+        baseUri: withTrailingSlash(entry.uri),
+        bundled: bundledPackIds.has(manifest.packId),
+      };
+
+      // Точечная деградация (часть 4): отсеиваем элементы без пригодных страниц.
+      const exists: AssetExists = (rel) => new File(entry, ...rel.split('/')).exists;
+      const { kept, hidden } = selectItems(manifest.items, exists);
+      for (const h of hidden) {
+        void logError('error_pack', `${manifest.packId}/${h.id}: скрыт (${h.reason})`);
+      }
+
+      packs.push(pack);
+      keptByPack.set(pack, kept);
+    } catch (e) {
+      // Любая FS-ошибка при разборе пака — пропускаем пак, не падаем.
+      void logError('error_fs', `scanCatalog(${entry.uri}): ${String(e)}`);
       continue;
     }
-    if (!isValidManifestShape(manifest)) continue;
-
-    // Версия схемы (часть 1): пак из будущей версии формата — мягко пропускаем,
-    // не роняя каталог. (В будущем UI: «обновите Barka».)
-    const schema = checkSchemaVersion(manifest);
-    if (!schema.ok) {
-      console.warn(`[catalog] пропущен пак ${manifest.packId}: ${schema.detail}`);
-      continue;
-    }
-    if (schema.legacy) {
-      console.warn(`[catalog] пак ${manifest.packId} без schemaVersion — трактуется как legacy v1`);
-    }
-
-    packs.push({
-      manifest,
-      baseUri: withTrailingSlash(entry.uri),
-      bundled: bundledPackIds.has(manifest.packId),
-    });
   }
 
-  // Собираем плоский список элементов и индекс по id.
+  // Собираем плоский список ПРИГОДНЫХ элементов и индекс по id.
   const items: CatalogEntry[] = [];
   const byId = new Map<string, CatalogEntry>();
   for (const pack of packs) {
-    for (const item of pack.manifest.items) {
+    for (const item of keptByPack.get(pack) ?? []) {
       const e: CatalogEntry = { item, pack };
       items.push(e);
       byId.set(item.id, e); // при коллизии id побеждает последний найденный пак

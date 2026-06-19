@@ -18,7 +18,7 @@
 import { Asset } from 'expo-asset';
 import { Directory, File } from 'expo-file-system';
 
-import { getInstalledPackVersion, markPackInstalled } from '../db/progress';
+import { getInstalledPackVersion, logError, markPackInstalled } from '../db/progress';
 import { ensurePacksRoot, packsRoot } from './catalog';
 import { compareVersions } from './packFormat';
 import type { PackManifest } from './types';
@@ -192,16 +192,24 @@ export async function bootstrapBundledPacks(): Promise<Set<string>> {
 
   for (const pack of BUNDLED_PACKS) {
     const { packId, version } = pack.manifest;
-    installed.add(packId);
 
-    const current = await getInstalledPackVersion(packId);
-    if (current !== null && compareVersions(current, version) >= 0) {
-      // Уже распакован и не старее — пропускаем (semver-сравнение).
-      continue;
+    // Распаковка каждого пака изолирована: сбой одного (нет места, битый ассет)
+    // НЕ должен валить старт — приложение поднимется с тем, что удалось распаковать.
+    try {
+      const current = await getInstalledPackVersion(packId);
+      if (current !== null && compareVersions(current, version) >= 0) {
+        // Уже распакован и не старее — пропускаем (semver-сравнение).
+        installed.add(packId);
+        continue;
+      }
+
+      await extractPack(pack);
+      await markPackInstalled(packId, version);
+      installed.add(packId);
+    } catch (e) {
+      // Помечаем как bundled НЕ будем (распаковка не удалась); каталог стартует без него.
+      void logError('error_fs', `bootstrap(${packId}): ${String(e)}`);
     }
-
-    await extractPack(pack);
-    await markPackInstalled(packId, version);
   }
 
   return installed;

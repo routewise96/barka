@@ -17,7 +17,7 @@ import * as SQLite from 'expo-sqlite';
 const DB_NAME = 'barka.db';
 
 /** Целевая версия схемы. Поднимать при добавлении миграции. */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 /**
  * Миграции по индексу: MIGRATIONS[0] переводит схему с v0 на v1 и т.д.
@@ -69,6 +69,12 @@ const MIGRATIONS: string[] = [
     version TEXT,
     installed_at INTEGER
   );
+  `,
+  // --- v3: detail для ошибочных событий (диагностика graceful degradation) ---
+  // events теперь несёт nullable detail TEXT: путь к файлу / itemId / сообщение
+  // об ошибке (см. logError). Нормальные события его не заполняют (NULL).
+  `
+  ALTER TABLE events ADD COLUMN detail TEXT;
   `,
 ];
 

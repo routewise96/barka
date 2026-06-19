@@ -12,6 +12,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { configureAudioForPlayback } from '../src/audio/player';
 import { colors } from '../src/theme/tokens';
 import { useAppStore } from '../src/store/useAppStore';
+import { ErrorBoundary } from '../src/ui/ErrorBoundary';
 
 export default function RootLayout() {
   const initialized = useAppStore((s) => s.initialized);
@@ -33,5 +34,11 @@ export default function RootLayout() {
   }
 
   // headerShown:false — навигация для детей строится иконками/звуком, не хедером (раздел 6).
-  return <Stack screenOptions={{ headerShown: false }} />;
+  // ErrorBoundary — последняя сеть: неперехваченная ошибка рендера показывает
+  // дружелюбный экран вместо краша (часть 5).
+  return (
+    <ErrorBoundary>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ErrorBoundary>
+  );
 }

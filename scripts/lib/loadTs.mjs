@@ -1,14 +1,13 @@
 /**
  * scripts/lib/loadTs.mjs — транспилирует и подгружает ЧИСТЫЕ TS-модули в Node.
  *
- * Зачем: contentHash и упаковка/распаковка .barka обязаны считаться ОДНИМ И ТЕМ ЖЕ
- * кодом на устройстве (RN) и в Node (генератор манифеста + round-trip тест). Чтобы
- * не дублировать алгоритмы, Node-скрипты подгружают РЕАЛЬНЫЕ src/content/*.ts через
- * установленный компилятор `typescript` (devDependency). Так тест гоняет продакшн-код.
+ * Зачем: логику формата (.barka) и defensive-политики каталога нужно тестировать
+ * headless ТЕМ ЖЕ кодом, что и рантайм RN. Node-скрипты подгружают РЕАЛЬНЫЕ
+ * src/content|db/*.ts через установленный компилятор `typescript` (devDependency).
  *
- * Транспилируем только модули без нативных импортов (sha256.ts, packFormat.ts).
- * `import type {...}` стирается компилятором; `import 'fflate'` → require('fflate'),
- * который резолвится из node_modules проекта (временная папка лежит внутри проекта).
+ * Транспилируем только модули без нативных импортов (expo-*). `import type {...}`
+ * стирается; `import 'fflate'` → require('fflate'), резолвится из node_modules проекта
+ * (временная папка лежит внутри проекта).
  */
 import { createRequire } from 'node:module';
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -18,14 +17,18 @@ import ts from 'typescript';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PROJECT = join(HERE, '..', '..');
-const SRC = join(PROJECT, 'src', 'content');
 const OUT = join(PROJECT, 'scripts', '.tmp-ts-build');
 
-/** Модули в порядке зависимостей (имя без расширения). */
-const MODULES = ['sha256', 'packFormat'];
+/** Чистые модули: исходный путь относительно src/ → имя выходного файла. */
+const REGISTRY = {
+  sha256: 'content/sha256.ts',
+  packFormat: 'content/packFormat.ts',
+  catalogPolicy: 'content/catalogPolicy.ts',
+  safeLog: 'db/safeLog.ts',
+};
 
 function transpileFile(name) {
-  const tsSource = readFileSync(join(SRC, `${name}.ts`), 'utf8');
+  const tsSource = readFileSync(join(PROJECT, 'src', REGISTRY[name]), 'utf8');
   const { outputText } = ts.transpileModule(tsSource, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -38,16 +41,24 @@ function transpileFile(name) {
 }
 
 /**
- * Транспилирует packFormat + зависимости и возвращает загруженный модуль packFormat.
- * Вызывающий сам решает, когда чистить (cleanup()).
+ * Транспилирует все зарегистрированные чистые модули и возвращает загруженные.
+ * (sha256 нужен packFormat'у; остальные самодостаточны.)
  */
-export function loadPackFormat() {
+export function loadAll() {
   rmSync(OUT, { recursive: true, force: true });
   mkdirSync(OUT, { recursive: true });
-  for (const m of MODULES) transpileFile(m);
-  // createRequire с базой внутри OUT: и относительные './sha256', и 'fflate' резолвятся.
-  const requireFromOut = createRequire(join(OUT, 'packFormat.js'));
-  return requireFromOut('./packFormat.js');
+  for (const name of Object.keys(REGISTRY)) transpileFile(name);
+  const req = createRequire(join(OUT, 'packFormat.js'));
+  return {
+    packFormat: req('./packFormat.js'),
+    catalogPolicy: req('./catalogPolicy.js'),
+    safeLog: req('./safeLog.js'),
+  };
+}
+
+/** Совместимость с существующими скриптами: вернуть только модуль packFormat. */
+export function loadPackFormat() {
+  return loadAll().packFormat;
 }
 
 export function cleanup() {

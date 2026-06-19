@@ -9,11 +9,11 @@
  *
  * Принимает уже разрешённый file:// URI картинки (через resolveAssetUri).
  */
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { playFromUri } from '../audio/player';
 import { TOUCH_TARGET_MIN, borders, colors, motion, radius, sizes } from '../theme/tokens';
+import { SafeImage } from './SafeImage';
 
 export interface BigButtonProps {
   /** Абсолютный file:// URI картинки кнопки. */
@@ -66,14 +66,11 @@ export function BigButton({
       ]}
     >
       {imageUri ? (
-        <Image
-          source={{ uri: imageUri }}
-          style={styles.image}
-          contentFit="cover"
-          cachePolicy="memory"
-          transition={0}
-        />
+        // Битая картинка контента деградирует в дружелюбный плейсхолдер (часть 2),
+        // кнопка остаётся кликабельной (обложка битая ≠ страницы битые).
+        <SafeImage uri={imageUri} style={styles.image} contentFit="cover" context={accessibilityLabel} />
       ) : (
+        // Картинки нет по дизайну (раздел без контента) — нейтральная пустая плитка.
         <View style={styles.placeholder} />
       )}
     </Pressable>

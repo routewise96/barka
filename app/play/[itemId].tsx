@@ -127,6 +127,7 @@ export default function Play() {
       <ImageScreen
         imageUri={resolveAssetUri(pack, page.image)}
         audioUri={resolveAssetUri(pack, page.audio)}
+        context={`${itemId}#p${state.pageIndex + 1}`}
         onBack={() => router.back()}
         // Линейная страница: тап = вперёд. Страница с выбором: тап = повтор озвучки.
         onPress={hasChoices ? undefined : () => dispatch({ type: 'NEXT' })}

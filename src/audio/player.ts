@@ -22,6 +22,9 @@
  * входе на экран» при повторном проигрывании того же трека делаем seekTo(0).
  */
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { File } from 'expo-file-system';
+
+import { logError } from '../db/progress';
 
 /** Текущий (единственный) живой плеер и URI его трека. */
 let current: AudioPlayer | null = null;
@@ -32,24 +35,53 @@ let currentUri: string | null = null;
  *  - тот же URI и плеер ещё жив → seekTo(0) + play() (перезапуск без пересоздания);
  *  - другой URI → освободить текущий, создать новый, play().
  *
+ * Graceful degradation (часть 3): НИКОГДА не кидает и не блокирует UI. Если файл
+ * отсутствует/не играется — логирует 'error_audio' и возвращает false, чтобы экран
+ * мог показать кнопку «повторить звук». true — воспроизведение запущено.
+ *
  * @param uri ТОЛЬКО file:// URI из resolveAssetUri (см. баг release-сборки выше).
  */
-export async function playFromUri(uri: string): Promise<void> {
+export async function playFromUri(uri: string): Promise<boolean> {
   // Тот же трек ещё в памяти — просто перематываем в начало и играем заново.
   if (current && currentUri === uri) {
-    await current.seekTo(0);
-    current.play();
-    return;
+    try {
+      await current.seekTo(0);
+      current.play();
+      return true;
+    } catch (e) {
+      // Плеер мог умереть — сбросим и попробуем пересоздать ниже.
+      releaseCurrent();
+      void logError('error_audio', `replay ${uri}: ${String(e)}`);
+    }
+  }
+
+  // Файла нет на диске (испорчен/удалён после установки) — не пытаемся играть.
+  try {
+    if (!new File(uri).exists) {
+      void logError('error_audio', `файл отсутствует: ${uri}`);
+      return false;
+    }
+  } catch {
+    // Проверку существования не удалось выполнить — продолжаем, плеер сам отвалится.
   }
 
   // Другой трек — гасим и освобождаем предыдущий, затем создаём новый.
   releaseCurrent();
 
-  const player = createAudioPlayer({ uri });
-  player.volume = 1.0;
-  current = player;
-  currentUri = uri;
-  player.play();
+  try {
+    const player = createAudioPlayer({ uri });
+    player.volume = 1.0;
+    current = player;
+    currentUri = uri;
+    player.play();
+    return true;
+  } catch (e) {
+    // Создание/старт плеера упали — деградируем тихо, экран покажет кнопку повтора.
+    void logError('error_audio', `play ${uri}: ${String(e)}`);
+    current = null;
+    currentUri = null;
+    return false;
+  }
 }
 
 /** Остановить и освободить текущий звук (если есть). После — ни одного живого плеера. */

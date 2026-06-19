@@ -11,7 +11,10 @@ import { bootstrapBundledPacks } from '../content/bootstrap';
 import { scanCatalog } from '../content/catalog';
 import type { Catalog, Lang } from '../content/types';
 import { getDb } from '../db/client';
-import { createProfile, listProfiles } from '../db/progress';
+import { createProfile, listProfiles, logError } from '../db/progress';
+
+/** Пустой каталог — крайняя деградация: приложение всё равно показывает экран. */
+const EMPTY_CATALOG: Catalog = { packs: [], items: [], byId: new Map() };
 
 interface AppState {
   /** Инициализация завершена (БД + паки + каталог готовы). */
@@ -49,9 +52,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (get().initialized || get().initializing) return;
     set({ initializing: true });
     try {
-      await getDb(); // открыть БД и применить миграции
-      const bundledIds = await bootstrapBundledPacks();
-      const catalog = await scanCatalog(bundledIds);
+      // БД может не открыться (переполнен диск, битый файл) — но приложение обязано
+      // подняться. Каждый шаг изолирован; в худшем случае показываем пустой каталог.
+      try {
+        await getDb(); // открыть БД и применить миграции
+      } catch (e) {
+        void logError('error_fs', `initialize/getDb: ${String(e)}`);
+      }
+
+      let catalog: Catalog = EMPTY_CATALOG;
+      try {
+        const bundledIds = await bootstrapBundledPacks();
+        catalog = await scanCatalog(bundledIds);
+      } catch (e) {
+        // Не должно случаться (bootstrap/scan сами defensive), но это последний рубеж.
+        void logError('error_fs', `initialize/catalog: ${String(e)}`);
+      }
+
       set({ catalog, initialized: true });
     } finally {
       set({ initializing: false });
@@ -59,9 +76,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshCatalog: async () => {
-    const bundledIds = await bootstrapBundledPacks();
-    const catalog = await scanCatalog(bundledIds);
-    set({ catalog });
+    try {
+      const bundledIds = await bootstrapBundledPacks();
+      const catalog = await scanCatalog(bundledIds);
+      set({ catalog });
+    } catch (e) {
+      void logError('error_fs', `refreshCatalog: ${String(e)}`);
+    }
   },
 
   ensureProfile: async () => {
