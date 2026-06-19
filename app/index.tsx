@@ -14,8 +14,10 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { entriesByType, resolveAssetUri } from '../src/content/catalog';
 import type { Catalog, ContentType } from '../src/content/types';
+import { shareAppLink } from '../src/sharing/shareAppLink';
 import { useAppStore } from '../src/store/useAppStore';
 import { BigButton } from '../src/ui/BigButton';
+import { ShareButton } from '../src/ui/ShareButton';
 import { colors, sizes, spacing } from '../src/theme/tokens';
 
 interface SectionDef {
@@ -69,6 +71,9 @@ export default function Home() {
           />
         ))}
       </View>
+
+      {/* Взрослое действие: поделиться ссылкой на приложение. Не мешает плиткам. */}
+      <ShareButton onPress={() => void shareAppLink()} />
     </View>
   );
 }
